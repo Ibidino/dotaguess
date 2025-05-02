@@ -5,7 +5,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dota 2 Hero Guessing Game</title>
-  <!-- Tailwind CDN for quick styling -->
+  <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-900 text-gray-100 flex flex-col items-center min-h-screen py-8">
@@ -17,10 +17,10 @@
     </header>
 
     <!-- Controls -->
-    <div id="controls" class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
       <button id="startBtn" class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg text-lg font-semibold">Start</button>
       <div id="timer" class="text-2xl font-mono">00:00</div>
-      <div id="counterWrapper" class="text-lg"><span id="counter">0</span> / <span id="total">0</span></div>
+      <div class="text-lg"><span id="counter">0</span> / <span id="total">0</span></div>
     </div>
 
     <!-- Input -->
@@ -47,13 +47,11 @@
     // === Helper Functions ===
     const normalize = str => str.toLowerCase().replace(/[^a-z]/g, "");
     const formatTime = ms => {
-      const totalSeconds = Math.floor(ms / 1000);
-      const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
-      const seconds = String(totalSeconds % 60).padStart(2, "0");
-      return `${minutes}:${seconds}`;
+      const s = Math.floor(ms / 1000);
+      return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
     };
 
-    // === Data ===
+    // === Hero Data ===
     const heroes = [
       "Abaddon","Alchemist","Ancient Apparition","Anti-Mage","Arc Warden","Axe","Bane","Batrider","Beastmaster","Bloodseeker","Bounty Hunter","Brewmaster","Bristleback","Broodmother","Centaur Warrunner","Chaos Knight","Chen","Clinkz","Clockwerk","Crystal Maiden","Dark Seer","Dark Willow","Dawnbreaker","Dazzle","Death Prophet","Disruptor","Doom","Dragon Knight","Drow Ranger","Earth Spirit","Earthshaker","Elder Titan","Ember Spirit","Enchantress","Enigma","Faceless Void","Grimstroke","Gyrocopter","Hoodwink","Huskar","Invoker","Io","Jakiro","Juggernaut","Keeper of the Light","Kunkka","Legion Commander","Leshrac","Lich","Lifestealer","Lina","Lion","Lone Druid","Luna","Lycan","Magnus","Marci","Mars","Medusa","Meepo","Mirana","Monkey King","Morphling","Muerta","Naga Siren","Nature's Prophet","Necrophos","Night Stalker","Nyx Assassin","Ogre Magi","Omniknight","Oracle","Outworld Destroyer","Pangolier","Phantom Assassin","Phantom Lancer","Phoenix","Primal Beast","Puck","Pudge","Pugna","Queen of Pain","Razor","Riki","Ringmaster","Rubick","Sand King","Shadow Demon","Shadow Fiend","Shadow Shaman","Silencer","Skywrath Mage","Slardar","Slark","Snapfire","Sniper","Spectre","Spirit Breaker","Storm Spirit","Sven","Techies","Templar Assassin","Terrorblade","Tidehunter","Timbersaw","Tinker","Tiny","Treant Protector","Troll Warlord","Tusk","Underlord","Undying","Ursa","Vengeful Spirit","Venomancer","Viper","Visage","Void Spirit","Warlock","Weaver","Windranger","Winter Wyvern","Witch Doctor","Wraith King","Zeus"
     ];
@@ -61,7 +59,21 @@
     const totalHeroes = heroes.length;
     const normalizedHeroes = heroes.map(normalize);
 
-    // === DOM Elements ===
+    // Accepted aliases → canonical normalised name
+    const aliasMap = {
+      centaur: "centaurwarrunner",
+      treant: "treantprotector",
+      nightstalker: "nightstalker",      // Night Stalker
+      antimage: "antimage",              // Anti‑Mage (handles space vs hyphen too)
+      bounty: "bountyhunter",
+      drow: "drowranger",
+      troll: "trollwarlord",
+      kotl: "keeperofthelight",
+      od: "outworlddestroyer",
+      nyx: "nyxassassin"
+    };
+
+    // === DOM ===
     const startBtn = document.getElementById("startBtn");
     const heroInput = document.getElementById("heroInput");
     const timerEl = document.getElementById("timer");
@@ -73,31 +85,26 @@
     const restartBtn = document.getElementById("restartBtn");
 
     // === State ===
-    let guessed = new Set();
+    let guessed = new Set(); // store canonical normalised names
     let startTime = null;
     let timerInterval = null;
 
     totalEl.textContent = totalHeroes;
 
-    // === Functions ===
-    function updateTimer() {
-      const elapsed = Date.now() - startTime;
-      timerEl.textContent = formatTime(elapsed);
-    }
+    // === Timer ===
+    const updateTimer = () => (timerEl.textContent = formatTime(Date.now() - startTime));
 
+    // === Game Logic ===
     function startGame() {
-      // reset state
       guessed.clear();
       guessedList.innerHTML = "";
       counterEl.textContent = "0";
       heroInput.value = "";
       heroInput.disabled = false;
       heroInput.focus();
-
-      // start timer
       startTime = Date.now();
       timerEl.textContent = "00:00";
-      if (timerInterval) clearInterval(timerInterval);
+      clearInterval(timerInterval);
       timerInterval = setInterval(updateTimer, 1000);
     }
 
@@ -108,7 +115,7 @@
       popup.classList.remove("hidden");
     }
 
-    // === Event Listeners ===
+    // === Events ===
     startBtn.addEventListener("click", () => {
       popup.classList.add("hidden");
       startGame();
@@ -122,30 +129,42 @@
     heroInput.addEventListener("keydown", e => {
       if (e.key !== "Enter") return;
 
-      const value = heroInput.value.trim();
-      if (!value) return;
+      const raw = heroInput.value.trim();
+      if (!raw) return;
 
-      const norm = normalize(value);
-      const index = normalizedHeroes.indexOf(norm);
+      const norm = normalize(raw);
 
-      if (index !== -1 && !guessed.has(norm)) {
-        guessed.add(norm);
-
-        // add list item
-        const li = document.createElement("li");
-        li.textContent = heroes[index];
-        li.className = "bg-gray-700 px-2 py-1 rounded select-none";
-        guessedList.appendChild(li);
-
-        // update counter
-        counterEl.textContent = guessed.size;
-
-        // check win condition
-        if (guessed.size === totalHeroes) {
-          endGame();
-        }
+      // Resolve alias → canonical normalised name
+      const canonicalNorm = normalizedHeroes.includes(norm) ? norm : aliasMap[norm];
+      if (!canonicalNorm) {
+        heroInput.value = "";
+        return; // invalid guess
       }
+
+      // Prevent duplicates
+      if (guessed.has(canonicalNorm)) {
+        heroInput.value = "";
+        return;
+      }
+
+      const index = normalizedHeroes.indexOf(canonicalNorm);
+      if (index === -1) {
+        heroInput.value = "";
+        return; // Should not happen, but guard anyway
+      }
+
+      // Record guess
+      guessed.add(canonicalNorm);
+      const li = document.createElement("li");
+      li.textContent = heroes[index];
+      li.className = "bg-gray-700 px-2 py-1 rounded select-none";
+      guessedList.appendChild(li);
+
+      counterEl.textContent = guessed.size;
       heroInput.value = "";
+
+      // Win condition
+      if (guessed.size === totalHeroes) endGame();
     });
   </script>
 </body>
