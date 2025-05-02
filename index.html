@@ -7,15 +7,14 @@
   <title>Dota 2 Hero Guessing Game</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    @keyframes bounceIn{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.05);opacity:1}100%{transform:scale(1)}}
-    .animate-bounceIn{animation:bounceIn .4s both}
+    @keyframes bounceIn{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.05);opacity:1}100%{transform:scale(1)}}.animate-bounceIn{animation:bounceIn .4s both}
   </style>
 </head>
 <body class="bg-gray-900 text-gray-100 flex flex-col items-center min-h-screen py-4">
   <div class="w-full max-w-6xl">
     <header class="text-center mb-4">
       <h1 class="text-2xl sm:text-3xl font-bold mb-1">Guess <span class="text-red-400">ALL</span> Dota 2 Heroes</h1>
-      <p class="text-gray-400 text-sm">Press <strong>Start</strong>, type a hero and hit <kbd class="border px-1 rounded">Enter</kbd></p>
+      <p class="text-gray-400 text-sm">Press <strong>Start</strong>, type a hero, hit <kbd class="border px-1 rounded">Enter</kbd></p>
     </header>
 
     <div class="flex flex-wrap justify-center items-center gap-4 mb-4">
@@ -41,57 +40,60 @@
   </div>
 
   <script>
-    /* --- Helpers --- */
+    // helper utilities
     const normalize = s => s.toLowerCase().replace(/[^a-z]/g, "");
     const fmtTime = ms => {
       const s = Math.floor(ms/1000);
       return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
     };
 
-    /* --- Data --- */
-    const heroes = ["Abaddon","Alchemist","Ancient Apparition","Anti-Mage","Arc Warden","Axe","Bane","Batrider","Beastmaster","Bloodseeker","Bounty Hunter","Brewmaster","Bristleback","Broodmother","Centaur Warrunner","Chaos Knight","Chen","Clinkz","Clockwerk","Crystal Maiden","Dark Seer","Dark Willow","Dawnbreaker","Dazzle","Death Prophet","Disruptor","Doom","Dragon Knight","Drow Ranger","Earth Spirit","Earthshaker","Elder Titan","Ember Spirit","Enchantress","Enigma","Faceless Void","Grimstroke","Gyrocopter","Hoodwink","Huskar","Invoker","Io","Jakiro","Juggernaut","Keeper of the Light","Kunkka","Legion Commander","Leshrac","Lich","Lifestealer","Lina","Lion","Lone Druid","Luna","Lycan","Magnus","Marci","Mars","Medusa","Meepo","Mirana","Monkey King","Morphling","Muerta","Naga Siren","Nature's Prophet","Necrophos","Night Stalker","Nyx Assassin","Ogre Magi","Omniknight","Oracle","Outworld Destroyer","Pangolier","Phantom Assassin","Phantom Lancer","Phoenix","Primal Beast","Puck","Pudge","Pugna","Queen of Pain","Razor","Riki","Ringmaster","Rubick","Sand King","Shadow Demon","Shadow Fiend","Shadow Shaman","Silencer","Skywrath Mage","Slardar","Slark","Snapfire","Sniper","Spectre","Spirit Breaker","Storm Spirit","Sven","Techies","Templar Assassin","Terrorblade","Tidehunter","Timbersaw","Tinker","Tiny","Treant Protector","Troll Warlord","Tusk","Underlord","Undying","Ursa","Vengeful Spirit","Venomancer","Viper","Visage","Void Spirit","Warlock","Weaver","Windranger","Winter Wyvern","Witch Doctor","Wraith King","Zeus"];
-    const totalHeroes = heroes.length;
-    const canonical = heroes.map(normalize);
+    // hero data
+    const heroes=["Abaddon","Alchemist","Ancient Apparition","Anti-Mage","Arc Warden","Axe","Bane","Batrider","Beastmaster","Bloodseeker","Bounty Hunter","Brewmaster","Bristleback","Broodmother","Centaur Warrunner","Chaos Knight","Chen","Clinkz","Clockwerk","Crystal Maiden","Dark Seer","Dark Willow","Dawnbreaker","Dazzle","Death Prophet","Disruptor","Doom","Dragon Knight","Drow Ranger","Earth Spirit","Earthshaker","Elder Titan","Ember Spirit","Enchantress","Enigma","Faceless Void","Grimstroke","Gyrocopter","Hoodwink","Huskar","Invoker","Io","Jakiro","Juggernaut","Keeper of the Light","Kunkka","Legion Commander","Leshrac","Lich","Lifestealer","Lina","Lion","Lone Druid","Luna","Lycan","Magnus","Marci","Mars","Medusa","Meepo","Mirana","Monkey King","Morphling","Muerta","Naga Siren","Nature's Prophet","Necrophos","Night Stalker","Nyx Assassin","Ogre Magi","Omniknight","Oracle","Outworld Destroyer","Pangolier","Phantom Assassin","Phantom Lancer","Phoenix","Primal Beast","Puck","Pudge","Pugna","Queen of Pain","Razor","Riki","Ringmaster","Rubick","Sand King","Shadow Demon","Shadow Fiend","Shadow Shaman","Silencer","Skywrath Mage","Slardar","Slark","Snapfire","Sniper","Spectre","Spirit Breaker","Storm Spirit","Sven","Techies","Templar Assassin","Terrorblade","Tidehunter","Timbersaw","Tinker","Tiny","Treant Protector","Troll Warlord","Tusk","Underlord","Undying","Ursa","Vengeful Spirit","Venomancer","Viper","Visage","Void Spirit","Warlock","Weaver","Windranger","Winter Wyvern","Witch Doctor","Wraith King","Zeus"];
+    const canonical=heroes.map(normalize);
 
-    const alias = {centaur:"centaurwarrunner",treant:"treantprotector",nightstalker:"nightstalker",antimage:"antimage",bounty:"bountyhunter",drow:"drowranger",troll:"trollwarlord",kotl:"keeperofthelight",od:"outworlddestroyer",nyx:"nyxassassin"};
+    // alias mapping
+    const alias={centaur:"centaurwarrunner",treant:"treantprotector",nightstalker:"nightstalker",antimage:"antimage",bounty:"bountyhunter",drow:"drowranger",troll:"trollwarlord",kotl:"keeperofthelight",od:"outworlddestroyer",nyx:"nyxassassin",outworlddevourer:"outworlddestroyer"};
 
-    const slug = {antimage:"anti_mage",centaurwarrunner:"centaur",lifestealer:"life_stealer",naturesprophet:"natures_prophet",outworlddestroyer:"outworld_destroyer",queenofpain:"queenofpain",shadowfiend:"shadow_fiend",wraithking:"wraith_king"};
+    // slug exceptions
+    const slug={antimage:"anti_mage",centaurwarrunner:"centaur",lifestealer:"life_stealer",naturesprophet:"natures_prophet",outworlddestroyer:"outworld_destroyer",queenofpain:"queenofpain",shadowfiend:"shadow_fiend",wraithking:"wraith_king"};
 
-    /* --- DOM --- */
-    const grid = document.getElementById('heroGrid');
-    const startBtn = document.getElementById('startBtn');
-    const heroInput = document.getElementById('heroInput');
-    const timerEl = document.getElementById('timer');
-    const counterEl = document.getElementById('counter');
-    const totalEl = document.getElementById('total');
-    const popup = document.getElementById('popup');
-    const finalTimeEl = document.getElementById('finalTime');
-    const restartBtn = document.getElementById('restartBtn');
+    // DOM refs
+    const grid=document.getElementById('heroGrid');
+    const startBtn=document.getElementById('startBtn');
+    const heroInput=document.getElementById('heroInput');
+    const timerEl=document.getElementById('timer');
+    const counterEl=document.getElementById('counter');
+    const totalEl=document.getElementById('total');
+    const popup=document.getElementById('popup');
+    const finalTimeEl=document.getElementById('finalTime');
+    const restartBtn=document.getElementById('restartBtn');
 
-    /* --- State --- */
-    let guessed = new Set();
-    let startTime = null, interval = null;
-    totalEl.textContent = totalHeroes;
+    // state
+    let guessed=new Set();
+    let startTime=null,interval=null;
+    totalEl.textContent=heroes.length;
 
-    /* --- Build grid --- */
-    const PLACEHOLDER = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 fill=%22%234a2e19%22/%3E%3Cpath d=%22M10 10h44v44H10z%22 fill=%22%23371d0c%22/%3E%3Cpath d=%22M18 18h28v28H18z%22 fill=%22%23ba4716%22/%3E%3C/svg%3E';
+    // placeholders with Dota logo svg (base64)
+    const PLACEHOLDER="data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA2NCA2NCc+PHJlY3Qgd2lkdGg9JzY0JyBoZWlnaHQ9JzY0JyBmaWxsPScjYjczMjE5Jy8+PHJlY3QgeD0nMTgnIHk9JzE4JyB3aWR0aD0nMjgnIGhlaWdodD0nMjgnIGZpbGw9JyM4YjFlMGYnLz48cGF0aCBkPSdNNDYgMThMMTggNDYnIHN0cm9rZT0nI2I3MzIxOScgc3Ryb2tlLXdpZHRoPSc2Jy8+PC9zdmc+";
 
+    // build grid
     heroes.forEach((h,i)=>{
       const li=document.createElement('li');
       li.dataset.hero=canonical[i];
-      li.className='w-10 h-10 sm:w-12 sm:h-12 md:w-12 md:h-12 bg-[#4a2e19] rounded overflow-hidden';
+      li.className='w-10 h-10 sm:w-12 sm:h-12 bg-[#4a2e19] rounded';
       li.style.backgroundImage=`url(${PLACEHOLDER})`;
-      li.style.backgroundSize='cover';
+      li.style.backgroundSize='contain';
+      li.style.backgroundRepeat='no-repeat';
+      li.style.backgroundPosition='center';
       grid.appendChild(li);
     });
 
-    /* --- Utility --- */
-    const heroSlug = c => slug[c] || heroes[canonical.indexOf(c)].toLowerCase().replace(/['.-]/g,'').replace(/\s+/g,'_');
-    const heroImg = c => `https://cdn.dota2.com/apps/dota2/images/heroes/${heroSlug(c)}_full.png`;
+    // util functions
+    const heroSlug=c=>slug[c]||heroes[canonical.indexOf(c)].toLowerCase().replace(/['.-]/g,'').replace(/\s+/g,'_');
+    const heroImg=c=>`https://cdn.dota2.com/apps/dota2/images/heroes/${heroSlug(c)}_full.png`;
+    const resetGrid=()=>grid.querySelectorAll('li').forEach(li=>{li.style.backgroundImage=`url(${PLACEHOLDER})`;li.style.backgroundSize='contain'});
 
-    const resetGrid = () => grid.querySelectorAll('li').forEach(li=>li.style.backgroundImage=`url(${PLACEHOLDER})`);
-
-    /* --- Game Flow --- */
+    // game flow
     function startGame(){
       guessed.clear();
       counterEl.textContent='0';
@@ -104,7 +106,6 @@
       clearInterval(interval);
       interval=setInterval(()=>timerEl.textContent=fmtTime(Date.now()-startTime),1000);
     }
-
     function win(){
       clearInterval(interval);
       finalTimeEl.textContent=timerEl.textContent;
@@ -112,7 +113,7 @@
       popup.classList.remove('hidden');
     }
 
-    /* --- Event Listeners --- */
+    // listeners
     startBtn.addEventListener('click',()=>{popup.classList.add('hidden');startGame();});
     restartBtn.addEventListener('click',()=>{popup.classList.add('hidden');startGame();});
 
@@ -122,15 +123,19 @@
       if(!val)return;
       val=alias[val]||val;
       if(!canonical.includes(val)||guessed.has(val)){
-        heroInput.value='';
-        return;
+        heroInput.value='';return;
       }
       guessed.add(val);
       counterEl.textContent=guessed.size;
       const li=grid.querySelector(`[data-hero="${val}"]`);
-      if(li){li.style.backgroundImage=`url(${heroImg(val)})`;}
+      if(li){
+        li.style.backgroundImage=`url(${heroImg(val)})`;
+        li.style.backgroundSize='contain';
+        li.style.backgroundPosition='center';
+        li.style.backgroundRepeat='no-repeat';
+      }
       heroInput.value='';
-      if(guessed.size===totalHeroes)win();
+      if(guessed.size===heroes.length)win();
     });
   </script>
 </body>
