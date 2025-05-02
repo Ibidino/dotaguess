@@ -7,51 +7,60 @@
   <title>Dota 2 Hero Guessing Game</title>
   <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* custom ease‑in bounce for popup */
+    @keyframes bounceIn {
+      0% {transform: scale(.6); opacity:0}
+      60%{transform: scale(1.05); opacity:1}
+      100%{transform: scale(1);}
+    }
+    .animate-bounceIn{animation:bounceIn .4s both;}
+  </style>
 </head>
-<body class="bg-gray-900 text-gray-100 flex flex-col items-center min-h-screen py-8">
-  <div class="w-full max-w-3xl">
+<body class="bg-gray-900 text-gray-100 flex flex-col items-center min-h-screen py-4">
+  <div class="w-full max-w-6xl">
     <!-- Header -->
-    <header class="text-center mb-6">
-      <h1 class="text-3xl sm:text-4xl font-bold mb-2">Guess <span class="text-red-400">ALL</span> Dota 2 Heroes</h1>
-      <p class="text-gray-400">How fast can you name them all?</p>
+    <header class="text-center mb-4">
+      <h1 class="text-2xl sm:text-3xl font-bold mb-1">Guess <span class="text-red-400">ALL</span> Dota 2 Heroes</h1>
+      <p class="text-gray-400 text-sm">Type a hero name & hit <kbd class="border px-1 rounded">Enter</kbd></p>
     </header>
 
     <!-- Controls -->
-    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
-      <button id="startBtn" class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg text-lg font-semibold">Start</button>
-      <div id="timer" class="text-2xl font-mono">00:00</div>
-      <div class="text-lg"><span id="counter">0</span> / <span id="total">0</span></div>
+    <div class="flex flex-wrap justify-center items-center gap-4 mb-4">
+      <button id="startBtn" class="bg-blue-600 hover:bg-blue-700 px-5 py-1.5 rounded-lg text-base font-semibold">Start</button>
+      <div id="timer" class="text-xl font-mono">00:00</div>
+      <div class="text-base"><span id="counter">0</span> / <span id="total">0</span></div>
     </div>
 
     <!-- Input -->
-    <div class="flex justify-center mb-6">
-      <input id="heroInput" type="text" placeholder="Type hero name & hit Enter…" class="w-full max-w-md px-4 py-2 bg-gray-800 rounded-lg focus:outline-none focus:ring focus:ring-blue-500 disabled:opacity-30" disabled />
+    <div class="flex justify-center mb-4">
+      <input id="heroInput" type="text" placeholder="Anti‑Mage, Axe…" class="w-full max-w-md px-3 py-2 bg-gray-800 rounded-lg focus:outline-none focus:ring focus:ring-blue-500 disabled:opacity-30" disabled />
     </div>
 
-    <!-- Guessed heroes list -->
-    <ul id="guessedList" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 text-sm"></ul>
+    <!-- Grid of hero squares -->
+    <ul id="heroGrid" class="grid grid-cols-10 sm:grid-cols-12 md:grid-cols-14 lg:grid-cols-16 xl:grid-cols-17 gap-1 place-items-center mx-auto select-none"></ul>
   </div>
 
-  <!-- Popup -->
+  <!-- Win Popup -->
   <div id="popup" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden">
     <div class="bg-gray-800 p-8 rounded-2xl text-center shadow-xl w-11/12 max-w-md animate-bounceIn">
-      <h2 class="text-2xl font-bold mb-4">Congratulations!</h2>
-      <p class="mb-2">You named <span class="font-semibold">all heroes</span> in:</p>
-      <p id="finalTime" class="text-4xl font-mono mb-6">00:00</p>
+      <h2 class="text-2xl font-bold mb-3">Congratulations!</h2>
+      <p class="mb-1">You named every hero in</p>
+      <p id="finalTime" class="text-3xl font-mono mb-6">00:00</p>
       <button id="restartBtn" class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg text-lg font-semibold">Play Again</button>
     </div>
   </div>
 
-  <!-- Main Script -->
+  <!-- Game Script -->
   <script>
-    // === Helper Functions ===
+    /* ---------- Helpers ---------- */
     const normalize = str => str.toLowerCase().replace(/[^a-z]/g, "");
     const formatTime = ms => {
       const s = Math.floor(ms / 1000);
-      return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+      return `${String(Math.floor(s / 60)).padStart(2,"0")}:${String(s % 60).padStart(2,"0")}`;
     };
 
-    // === Hero Data ===
+    /* ---------- Data ---------- */
     const heroes = [
       "Abaddon","Alchemist","Ancient Apparition","Anti-Mage","Arc Warden","Axe","Bane","Batrider","Beastmaster","Bloodseeker","Bounty Hunter","Brewmaster","Bristleback","Broodmother","Centaur Warrunner","Chaos Knight","Chen","Clinkz","Clockwerk","Crystal Maiden","Dark Seer","Dark Willow","Dawnbreaker","Dazzle","Death Prophet","Disruptor","Doom","Dragon Knight","Drow Ranger","Earth Spirit","Earthshaker","Elder Titan","Ember Spirit","Enchantress","Enigma","Faceless Void","Grimstroke","Gyrocopter","Hoodwink","Huskar","Invoker","Io","Jakiro","Juggernaut","Keeper of the Light","Kunkka","Legion Commander","Leshrac","Lich","Lifestealer","Lina","Lion","Lone Druid","Luna","Lycan","Magnus","Marci","Mars","Medusa","Meepo","Mirana","Monkey King","Morphling","Muerta","Naga Siren","Nature's Prophet","Necrophos","Night Stalker","Nyx Assassin","Ogre Magi","Omniknight","Oracle","Outworld Destroyer","Pangolier","Phantom Assassin","Phantom Lancer","Phoenix","Primal Beast","Puck","Pudge","Pugna","Queen of Pain","Razor","Riki","Ringmaster","Rubick","Sand King","Shadow Demon","Shadow Fiend","Shadow Shaman","Silencer","Skywrath Mage","Slardar","Slark","Snapfire","Sniper","Spectre","Spirit Breaker","Storm Spirit","Sven","Techies","Templar Assassin","Terrorblade","Tidehunter","Timbersaw","Tinker","Tiny","Treant Protector","Troll Warlord","Tusk","Underlord","Undying","Ursa","Vengeful Spirit","Venomancer","Viper","Visage","Void Spirit","Warlock","Weaver","Windranger","Winter Wyvern","Witch Doctor","Wraith King","Zeus"
     ];
@@ -59,12 +68,12 @@
     const totalHeroes = heroes.length;
     const normalizedHeroes = heroes.map(normalize);
 
-    // Accepted aliases → canonical normalised name
+    /* aliases accepted from previous request */
     const aliasMap = {
       centaur: "centaurwarrunner",
       treant: "treantprotector",
-      nightstalker: "nightstalker",      // Night Stalker
-      antimage: "antimage",              // Anti‑Mage (handles space vs hyphen too)
+      nightstalker: "nightstalker",
+      antimage: "antimage",
       bounty: "bountyhunter",
       drow: "drowranger",
       troll: "trollwarlord",
@@ -73,98 +82,131 @@
       nyx: "nyxassassin"
     };
 
-    // === DOM ===
-    const startBtn = document.getElementById("startBtn");
-    const heroInput = document.getElementById("heroInput");
-    const timerEl = document.getElementById("timer");
-    const counterEl = document.getElementById("counter");
-    const totalEl = document.getElementById("total");
-    const guessedList = document.getElementById("guessedList");
-    const popup = document.getElementById("popup");
-    const finalTimeEl = document.getElementById("finalTime");
-    const restartBtn = document.getElementById("restartBtn");
+    /* Map canonical (normalized) → CDN slug for image; only when it differs */
+    const slugMap = {
+      antimage: "anti_mage",
+      centaurwarrunner: "centaur",
+      lifestealer: "life_stealer",
+      naturesprophet: "natures_prophet",
+      outworlddestroyer: "outworld_destroyer",
+      queeno fpain: "queenofpain", // fallback but canonical key has no space; we'll handle later
+      queenofpain: "queenofpain",
+      shadowfiend: "shadow_fiend",
+      wraithking: "wraith_king"
+    };
 
-    // === State ===
-    let guessed = new Set(); // store canonical normalised names
+    /* ---------- DOM ---------- */
+    const startBtn = document.getElementById('startBtn');
+    const heroInput = document.getElementById('heroInput');
+    const timerEl   = document.getElementById('timer');
+    const counterEl = document.getElementById('counter');
+    const totalEl   = document.getElementById('total');
+    const gridEl    = document.getElementById('heroGrid');
+    const popup     = document.getElementById('popup');
+    const finalTimeEl = document.getElementById('finalTime');
+    const restartBtn = document.getElementById('restartBtn');
+
+    /* ---------- State ---------- */
+    let guessed = new Set();
     let startTime = null;
     let timerInterval = null;
 
     totalEl.textContent = totalHeroes;
 
-    // === Timer ===
-    const updateTimer = () => (timerEl.textContent = formatTime(Date.now() - startTime));
+    /* ---------- Build grid ---------- */
+    const PLACEHOLDER_LOGO = 'https://seeklogo.com/images/D/dota-2-logo-182136BCCD-seeklogo.com.png';
+    heroes.forEach((hero, idx) => {
+      const li = document.createElement('li');
+      li.dataset.hero = normalizedHeroes[idx];
+      li.className = 'w-10 h-10 sm:w-12 sm:h-12 md:w-12 md:h-12 bg-[#4a2e19] rounded relative';
+      li.style.backgroundImage = `url(${PLACEHOLDER_LOGO})`;
+      li.style.backgroundSize   = '60%';
+      li.style.backgroundRepeat = 'no-repeat';
+      li.style.backgroundPosition = 'center';
+      gridEl.appendChild(li);
+    });
 
-    // === Game Logic ===
-    function startGame() {
+    /* ---------- Functions ---------- */
+    function updateTimer(){ timerEl.textContent = formatTime(Date.now() - startTime); }
+
+    function startGame(){
       guessed.clear();
-      guessedList.innerHTML = "";
-      counterEl.textContent = "0";
-      heroInput.value = "";
+      counterEl.textContent = '0';
+      heroInput.value = '';
       heroInput.disabled = false;
       heroInput.focus();
+
+      // reset squares
+      gridEl.childNodes.forEach(li => {
+        li.style.backgroundImage = `url(${PLACEHOLDER_LOGO})`;
+      });
+
+      // timer
       startTime = Date.now();
-      timerEl.textContent = "00:00";
+      timerEl.textContent = '00:00';
       clearInterval(timerInterval);
       timerInterval = setInterval(updateTimer, 1000);
     }
 
-    function endGame() {
+    function endGame(){
       clearInterval(timerInterval);
       finalTimeEl.textContent = timerEl.textContent;
       heroInput.disabled = true;
-      popup.classList.remove("hidden");
+      popup.classList.remove('hidden');
     }
 
-    // === Events ===
-    startBtn.addEventListener("click", () => {
-      popup.classList.add("hidden");
-      startGame();
-    });
-
-    restartBtn.addEventListener("click", () => {
-      popup.classList.add("hidden");
-      startGame();
-    });
-
-    heroInput.addEventListener("keydown", e => {
-      if (e.key !== "Enter") return;
-
-      const raw = heroInput.value.trim();
-      if (!raw) return;
-
-      const norm = normalize(raw);
-
-      // Resolve alias → canonical normalised name
-      const canonicalNorm = normalizedHeroes.includes(norm) ? norm : aliasMap[norm];
-      if (!canonicalNorm) {
-        heroInput.value = "";
-        return; // invalid guess
+    /* ---------- Image util ---------- */
+    function heroSlug(canonical){
+      if(slugMap[canonical]) return slugMap[canonical];
+      // insert underscores between words that originally had spaces/apostrophes (approx by matching original heroes list)
+      const original = heroes[normalizedHeroes.indexOf(canonical)] || '';
+      if(original){
+        return original.toLowerCase().replace(/['.-]/g,'').replace(/\s+/g,'_');
       }
+      return canonical; // fallback
+    }
 
-      // Prevent duplicates
-      if (guessed.has(canonicalNorm)) {
-        heroInput.value = "";
+    function heroImageUrl(canonical){
+      return `https://cdn.dota2.com/apps/dota2/images/heroes/${heroSlug(canonical)}_full.png`;
+    }
+
+    /* ---------- Events ---------- */
+    startBtn.addEventListener('click', () => {
+      popup.classList.add('hidden');
+      startGame();
+    });
+
+    restartBtn.addEventListener('click', () => {
+      popup.classList.add('hidden');
+      startGame();
+    });
+
+    heroInput.addEventListener('keydown', e => {
+      if(e.key !== 'Enter') return;
+      const raw = heroInput.value.trim();
+      if(!raw) return;
+
+      let norm = normalize(raw);
+      if(aliasMap[norm]) norm = aliasMap[norm];
+
+      // prevent duplicates & validate
+      if(!normalizedHeroes.includes(norm) || guessed.has(norm)){
+        heroInput.value = '';
         return;
       }
 
-      const index = normalizedHeroes.indexOf(canonicalNorm);
-      if (index === -1) {
-        heroInput.value = "";
-        return; // Should not happen, but guard anyway
+      guessed.add(norm);
+      counterEl.textContent = guessed.size;
+
+      /* transform square */
+      const li = gridEl.querySelector(`[data-hero="${norm}"]`);
+      if(li){
+        li.style.backgroundImage = `url(${heroImageUrl(norm)})`;
+        li.style.backgroundSize = 'cover';
       }
 
-      // Record guess
-      guessed.add(canonicalNorm);
-      const li = document.createElement("li");
-      li.textContent = heroes[index];
-      li.className = "bg-gray-700 px-2 py-1 rounded select-none";
-      guessedList.appendChild(li);
-
-      counterEl.textContent = guessed.size;
-      heroInput.value = "";
-
-      // Win condition
-      if (guessed.size === totalHeroes) endGame();
+      heroInput.value = '';
+      if(guessed.size === totalHeroes) endGame();
     });
   </script>
 </body>
