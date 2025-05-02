@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dota 2 Hero Guessing Game</title>
+  <!-- Tailwind CDN for quick styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 flex flex-col items-center min-h-screen py-8">
+  <div class="w-full max-w-3xl">
+    <!-- Header -->
+    <header class="text-center mb-6">
+      <h1 class="text-3xl sm:text-4xl font-bold mb-2">Guess <span class="text-red-400">ALL</span> Dota 2 Heroes</h1>
+      <p class="text-gray-400">How fast can you name them all?</p>
+    </header>
+
+    <!-- Controls -->
+    <div id="controls" class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
+      <button id="startBtn" class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg text-lg font-semibold">Start</button>
+      <div id="timer" class="text-2xl font-mono">00:00</div>
+      <div id="counterWrapper" class="text-lg"><span id="counter">0</span> / <span id="total">0</span></div>
+    </div>
+
+    <!-- Input -->
+    <div class="flex justify-center mb-6">
+      <input id="heroInput" type="text" placeholder="Type hero name & hit Enter…" class="w-full max-w-md px-4 py-2 bg-gray-800 rounded-lg focus:outline-none focus:ring focus:ring-blue-500 disabled:opacity-30" disabled />
+    </div>
+
+    <!-- Guessed heroes list -->
+    <ul id="guessedList" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 text-sm"></ul>
+  </div>
+
+  <!-- Popup -->
+  <div id="popup" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden">
+    <div class="bg-gray-800 p-8 rounded-2xl text-center shadow-xl w-11/12 max-w-md animate-bounceIn">
+      <h2 class="text-2xl font-bold mb-4">Congratulations!</h2>
+      <p class="mb-2">You named <span class="font-semibold">all heroes</span> in:</p>
+      <p id="finalTime" class="text-4xl font-mono mb-6">00:00</p>
+      <button id="restartBtn" class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg text-lg font-semibold">Play Again</button>
+    </div>
+  </div>
+
+  <!-- Main Script -->
+  <script>
+    // === Helper Functions ===
+    const normalize = str => str.toLowerCase().replace(/[^a-z]/g, "");
+    const formatTime = ms => {
+      const totalSeconds = Math.floor(ms / 1000);
+      const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
+      const seconds = String(totalSeconds % 60).padStart(2, "0");
+      return `${minutes}:${seconds}`;
+    };
+
+    // === Data ===
+    const heroes = [
+      "Abaddon","Alchemist","Ancient Apparition","Anti-Mage","Arc Warden","Axe","Bane","Batrider","Beastmaster","Bloodseeker","Bounty Hunter","Brewmaster","Bristleback","Broodmother","Centaur Warrunner","Chaos Knight","Chen","Clinkz","Clockwerk","Crystal Maiden","Dark Seer","Dark Willow","Dawnbreaker","Dazzle","Death Prophet","Disruptor","Doom","Dragon Knight","Drow Ranger","Earth Spirit","Earthshaker","Elder Titan","Ember Spirit","Enchantress","Enigma","Faceless Void","Grimstroke","Gyrocopter","Hoodwink","Huskar","Invoker","Io","Jakiro","Juggernaut","Keeper of the Light","Kunkka","Legion Commander","Leshrac","Lich","Lifestealer","Lina","Lion","Lone Druid","Luna","Lycan","Magnus","Marci","Mars","Medusa","Meepo","Mirana","Monkey King","Morphling","Muerta","Naga Siren","Nature's Prophet","Necrophos","Night Stalker","Nyx Assassin","Ogre Magi","Omniknight","Oracle","Outworld Destroyer","Pangolier","Phantom Assassin","Phantom Lancer","Phoenix","Primal Beast","Puck","Pudge","Pugna","Queen of Pain","Razor","Riki","Ringmaster","Rubick","Sand King","Shadow Demon","Shadow Fiend","Shadow Shaman","Silencer","Skywrath Mage","Slardar","Slark","Snapfire","Sniper","Spectre","Spirit Breaker","Storm Spirit","Sven","Techies","Templar Assassin","Terrorblade","Tidehunter","Timbersaw","Tinker","Tiny","Treant Protector","Troll Warlord","Tusk","Underlord","Undying","Ursa","Vengeful Spirit","Venomancer","Viper","Visage","Void Spirit","Warlock","Weaver","Windranger","Winter Wyvern","Witch Doctor","Wraith King","Zeus"
+    ];
+
+    const totalHeroes = heroes.length;
+    const normalizedHeroes = heroes.map(normalize);
+
+    // === DOM Elements ===
+    const startBtn = document.getElementById("startBtn");
+    const heroInput = document.getElementById("heroInput");
+    const timerEl = document.getElementById("timer");
+    const counterEl = document.getElementById("counter");
+    const totalEl = document.getElementById("total");
+    const guessedList = document.getElementById("guessedList");
+    const popup = document.getElementById("popup");
+    const finalTimeEl = document.getElementById("finalTime");
+    const restartBtn = document.getElementById("restartBtn");
+
+    // === State ===
+    let guessed = new Set();
+    let startTime = null;
+    let timerInterval = null;
+
+    totalEl.textContent = totalHeroes;
+
+    // === Functions ===
+    function updateTimer() {
+      const elapsed = Date.now() - startTime;
+      timerEl.textContent = formatTime(elapsed);
+    }
+
+    function startGame() {
+      // reset state
+      guessed.clear();
+      guessedList.innerHTML = "";
+      counterEl.textContent = "0";
+      heroInput.value = "";
+      heroInput.disabled = false;
+      heroInput.focus();
+
+      // start timer
+      startTime = Date.now();
+      timerEl.textContent = "00:00";
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(updateTimer, 1000);
+    }
+
+    function endGame() {
+      clearInterval(timerInterval);
+      finalTimeEl.textContent = timerEl.textContent;
+      heroInput.disabled = true;
+      popup.classList.remove("hidden");
+    }
+
+    // === Event Listeners ===
+    startBtn.addEventListener("click", () => {
+      popup.classList.add("hidden");
+      startGame();
+    });
+
+    restartBtn.addEventListener("click", () => {
+      popup.classList.add("hidden");
+      startGame();
+    });
+
+    heroInput.addEventListener("keydown", e => {
+      if (e.key !== "Enter") return;
+
+      const value = heroInput.value.trim();
+      if (!value) return;
+
+      const norm = normalize(value);
+      const index = normalizedHeroes.indexOf(norm);
+
+      if (index !== -1 && !guessed.has(norm)) {
+        guessed.add(norm);
+
+        // add list item
+        const li = document.createElement("li");
+        li.textContent = heroes[index];
+        li.className = "bg-gray-700 px-2 py-1 rounded select-none";
+        guessedList.appendChild(li);
+
+        // update counter
+        counterEl.textContent = guessed.size;
+
+        // check win condition
+        if (guessed.size === totalHeroes) {
+          endGame();
+        }
+      }
+      heroInput.value = "";
+    });
+  </script>
+</body>
+</html>
